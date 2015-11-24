@@ -196,6 +196,20 @@ module Frameit
 
       self.top_space_above_device += title.height + vertical_padding
 
+      if font_size
+        text = fetch_text(:title)
+        lines = text.split('\n')
+        lastLine = lines.last
+        lastLineContainsDescender = ["g", "j", "p", "q", "y"].any? { |charWithDescender| lastLine.include? charWithDescender }
+        if lastLineContainsDescender
+          Helper.log.debug "Last line contains descenders, adjusting vertical offset to remove descender height" if $verbose
+          # Removing descender height. This really only works for MrEaves, 0.26 is the factor determined to work here.
+          # This way, a screenshot with multi-line title will render the device frame into the same y-Position, regardless of whether the last line has descenders or not
+          # Erm, this doesn't work for languages with non-latin characters (yet ...)
+          self.top_space_above_device -= (0.26 * font_size).round
+        end
+      end      
+
       # First, put the keyword on top of the screenshot, if we have one
       if keyword
         background = background.composite(keyword, "png") do |c|
